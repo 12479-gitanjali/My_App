@@ -1,37 +1,36 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { SafeAreaView, StyleSheet, StatusBar } from 'react-native'
+import { firebaseConfig } from '@/config/Config'
+import { initializeApp } from '@firebase/app'
+import { getAuth } from '@firebase/auth'
+import { AuthContext } from '@/contexts/AuthContext';
+import { DbContext } from '@/contexts/DbContext';
+import { getFirestore } from '@firebase/firestore'
+import { blue } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
+  // initialize firebase
+  const FBapp = initializeApp(firebaseConfig)
+  // intitialize firebase auth
+  const FBauth = getAuth(FBapp)
+  // initialize firebase firestore
+  const FBdb = getFirestore(FBapp)
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
-  );
+    <AuthContext.Provider value={FBauth}>
+      <DbContext.Provider value={FBdb}>
+        <SafeAreaView style={styles.container}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </SafeAreaView>
+      </DbContext.Provider>
+    </AuthContext.Provider>
+  )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: StatusBar.currentHeight,
+    backgroundColor: "#11a1ee",
+  }
+})

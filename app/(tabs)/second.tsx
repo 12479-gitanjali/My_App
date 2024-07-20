@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet } from 'react-native'
-export default function HomeScreen( props:any ) {
+export default function SecondScreen( props:any ) {
     return (
         <View>
-            <Text>Home</Text>
+            <Text>Second Screen</Text>
         </View>
     )
 }

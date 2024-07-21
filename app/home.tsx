@@ -8,7 +8,6 @@ import { useNavigation } from 'expo-router'
 import { SignOutButton } from '@/components/SignOutButton'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { FontAwesome5, FontAwesome6 } from '@expo/vector-icons'
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 
 export default function Home(props: any) {
     const auth = useContext(AuthContext)

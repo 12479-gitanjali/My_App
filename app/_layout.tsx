@@ -7,6 +7,8 @@ import { AuthContext } from '@/contexts/AuthContext';
 import { DbContext } from '@/contexts/DbContext';
 import { getFirestore } from '@firebase/firestore'
 import { blue } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
+import { Tabs } from "expo-router";
+
 
 export default function RootLayout() {
   // initialize firebase
@@ -31,6 +33,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: StatusBar.currentHeight,
-    backgroundColor: "#11a1ee",
   }
 })

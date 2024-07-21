@@ -94,6 +94,7 @@ export default function Home(props: any) {
                 style={styles.list}
             />
         </View>
+        
     )
 }
 

@@ -52,12 +52,12 @@ const HomeScreen = () => {
             expenses: expenses
         }
         const authUser = auth.currentUser.uid
-        const path = `users/${authUser}/expenses`
+        const path = `users/${authUser}/items`
         const docRef = await addDoc(collection(db, path), data)
     }
 
     const fetchData = async () => {
-        const path = `users/${auth.currentUser.uid}/expenses`
+        const path = `users/${auth.currentUser.uid}/items`
         const q = query(collection(db, path))
         const unsub = onSnapshot(q, (querySnapshot) => {
             let items: any = []
@@ -182,12 +182,12 @@ const AccountScreen = () => {
             income: income
         }
         const authUser = auth.currentUser.uid
-        const path = `users/${authUser}/income`
+        const path = `users/${authUser}/items`
         const docRef = await addDoc(collection(db, path), data)
     }
 
     const fetchData = async () => {
-        const path = `users/${auth.currentUser.uid}/income`
+        const path = `users/${auth.currentUser.uid}/items`
         const q = query(collection(db, path))
         const unsub = onSnapshot(q, (querySnapshot) => {
             let items: any = []
@@ -205,7 +205,7 @@ const AccountScreen = () => {
         return (
             <View style={styles.listItem}>
                 <Text>{props.income}</Text>
-                <Link href={{ pathname: "/incomedetails", params: { id: props.id } }}>
+                <Link href={{ pathname: "/detail", params: { id: props.id } }}>
                     <Text>Detail</Text>
                 </Link>
             </View>
@@ -220,7 +220,7 @@ const AccountScreen = () => {
 
     const renderItem = ({ item }: any) => {
         return (
-            <ListItem income={item.income} id={item.id} />
+            <ListItem expenses={item.expenses} id={item.id} />
         )
     }
 
@@ -249,7 +249,7 @@ const AccountScreen = () => {
             >
                 <View style={styles.modal}>
                     <View style={styles.modalContainer}>
-                        <Text>Enter Income</Text>
+                        <Text>Enter Expenses</Text>
                         <TextInput style={styles.modalInput} value={income} onChangeText={(val) => setIncome(val)} />
                         <Text>Enter Amount</Text>
                         <TextInput style={styles.modalInput} inputMode="numeric" value={amount} onChangeText={(val) => setAmount(val)} />

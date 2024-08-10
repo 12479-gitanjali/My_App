@@ -30,7 +30,7 @@ export default function Detail(props: any) {
     }, [document])
 
     const getDocument = async (documentId: string) => {
-        const docRef = doc(db, `users/${auth.currentUser.uid}/expenses`, id)
+        const docRef = doc(db, `users/${auth.currentUser.uid}/items`, id)
         const docSnap = await getDoc(docRef)
         setDocument(docSnap.data() as Idoc)
         setModified( false )
@@ -38,13 +38,13 @@ export default function Detail(props: any) {
 
 
     const deleteDocument = async ( documentId: string ) => {
-        const docRef = doc(db, `users/${auth.currentUser.uid}/expenses`, id)
+        const docRef = doc(db, `users/${auth.currentUser.uid}/items`, id)
         const delDoc = await deleteDoc( docRef )
         navigation.goBack()
     }
 
     const updateDocument = async () => {
-        const docRef = doc(db, `users/${auth.currentUser.uid}/expenses`, id)
+        const docRef = doc(db, `users/${auth.currentUser.uid}/items`, id)
         const update = await updateDoc( 
             docRef, { time: document.time, expenses: document.expenses, amount: document.amount}
         )

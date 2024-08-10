@@ -14,7 +14,7 @@ export default function Detail(props: any) {
 
     interface Idoc {
         amount: number,
-        expenses: string,
+        income: string,
         time: number,
     }
     const [document, setDocument] = useState<Idoc | any>()
@@ -30,7 +30,7 @@ export default function Detail(props: any) {
     }, [document])
 
     const getDocument = async (documentId: string) => {
-        const docRef = doc(db, `users/${auth.currentUser.uid}/expenses`, id)
+        const docRef = doc(db, `users/${auth.currentUser.uid}/income`, id)
         const docSnap = await getDoc(docRef)
         setDocument(docSnap.data() as Idoc)
         setModified( false )
@@ -38,15 +38,15 @@ export default function Detail(props: any) {
 
 
     const deleteDocument = async ( documentId: string ) => {
-        const docRef = doc(db, `users/${auth.currentUser.uid}/expenses`, id)
+        const docRef = doc(db, `users/${auth.currentUser.uid}/income`, id)
         const delDoc = await deleteDoc( docRef )
         navigation.goBack()
     }
 
     const updateDocument = async () => {
-        const docRef = doc(db, `users/${auth.currentUser.uid}/expenses`, id)
+        const docRef = doc(db, `users/${auth.currentUser.uid}/income`, id)
         const update = await updateDoc( 
-            docRef, { time: document.time, expenses: document.expenses, amount: document.amount}
+            docRef, { time: document.time, income: document.income, amount: document.amount}
         )
         navigation.goBack()
     }
@@ -65,9 +65,9 @@ export default function Detail(props: any) {
     if (document) {
         return (
             <View style={ styles.container }>
-                <Text style={ styles.title }>Expenses</Text>
+                <Text style={ styles.title }>Income</Text>
                 <TextInput 
-                    value={document.expenses } 
+                    value={document.income } 
                     style={ styles.input } 
                     onChangeText={ (val) => setDocument({ time: document.time, expenses: val, amount: document.amount }) }
                 />

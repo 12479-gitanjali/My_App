@@ -107,7 +107,7 @@ export default function App() {
           if (route.name === 'Home') {
             iconName = 'home';
           } else if (route.name === 'Account') {
-            iconName = 'user';
+            iconName = 'circle';
           } else if (route.name === 'Settings') {  
             iconName = 'cog';
           }

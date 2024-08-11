@@ -4,6 +4,7 @@ import { useState, useEffect, useContext } from 'react'
 import { DbContext } from '@/contexts/DbContext'
 import { AuthContext } from '@/contexts/AuthContext'
 import { doc, getDoc, deleteDoc, updateDoc } from '@firebase/firestore'
+import React from 'react'
 
 export default function Detail(props: any) {
     const db = useContext(DbContext)
@@ -30,7 +31,7 @@ export default function Detail(props: any) {
     }, [document])
 
     const getDocument = async (documentId: string) => {
-        const docRef = doc(db, `users/${auth.currentUser.uid}/items`, id)
+        const docRef = doc(db, `users/${auth.currentUser.uid}/expenses`, id)
         const docSnap = await getDoc(docRef)
         setDocument(docSnap.data() as Idoc)
         setModified( false )
@@ -38,13 +39,13 @@ export default function Detail(props: any) {
 
 
     const deleteDocument = async ( documentId: string ) => {
-        const docRef = doc(db, `users/${auth.currentUser.uid}/items`, id)
+        const docRef = doc(db, `users/${auth.currentUser.uid}/expenses`, id)
         const delDoc = await deleteDoc( docRef )
         navigation.goBack()
     }
 
     const updateDocument = async () => {
-        const docRef = doc(db, `users/${auth.currentUser.uid}/items`, id)
+        const docRef = doc(db, `users/${auth.currentUser.uid}/expenses`, id)
         const update = await updateDoc( 
             docRef, { time: document.time, expenses: document.expenses, amount: document.amount}
         )
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
         padding: 5,
         borderColor: '#CCCCCC',
         borderStyle: 'solid',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#83FF2D',
         fontSize: 16,
         marginBottom: 20,
     },

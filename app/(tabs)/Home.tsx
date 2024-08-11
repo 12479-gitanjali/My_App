@@ -1,17 +1,18 @@
-import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput } from 'react-native'
-import { AuthContext } from '@/contexts/AuthContext'
-import { useContext, useEffect, useState } from 'react'
-import { useRouter, Link } from 'expo-router'
-import { DbContext } from '@/contexts/DbContext'
-import { collection, addDoc, where, query, onSnapshot } from "firebase/firestore"
-import { useNavigation } from 'expo-router'
-import { SignOutButton } from '@/components/SignOutButton'
-import { Ionicons } from '@expo/vector-icons'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import React, { useContext, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput } from 'react-native';
+import { AuthContext } from '@/contexts/AuthContext';
+import { DbContext } from '@/contexts/DbContext';
+import { collection, addDoc, query, onSnapshot } from "firebase/firestore";
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native'; // Changed import
+import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { SignOutButton } from '@/components/SignOutButton';
 
 const Tab = createBottomTabNavigator();
 
-export default function Home(props: any) {
+const HomeScreen = () => {
     const auth = useContext(AuthContext)
     const db = useContext(DbContext)
     const router = useRouter()
@@ -20,8 +21,8 @@ export default function Home(props: any) {
     const [data, setData] = useState([])
     const [loaded, setLoaded] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
-    const [title, setTitle] = useState('')
-    const [number, setNumber] = useState('')
+    const [expenses, setExpenses] = useState('')
+    const [amount, setAmount] = useState('')
 
     // showing the header via setOptions()
     useEffect(() => {
@@ -39,24 +40,24 @@ export default function Home(props: any) {
     }, [data, auth])
 
     useEffect( () => {
-        setTitle('')
-        setNumber('')
+        setExpenses('')
+        setAmount('')
     }, [modalVisible])
 
 
     const addData = async () => {
         const data = {
             time: new Date().getTime(),
-            Amount: parseInt(number),
-            Expenses: title
+            amount: parseInt(amount),
+            expenses: expenses
         }
         const authUser = auth.currentUser.uid
-        const path = `users/${authUser}/items`
+        const path = `users/${authUser}/expenses`
         const docRef = await addDoc(collection(db, path), data)
     }
 
     const fetchData = async () => {
-        const path = `users/${auth.currentUser.uid}/items`
+        const path = `users/${auth.currentUser.uid}/expenses`
         const q = query(collection(db, path))
         const unsub = onSnapshot(q, (querySnapshot) => {
             let items: any = []
@@ -73,7 +74,7 @@ export default function Home(props: any) {
     const ListItem = (props: any) => {
         return (
             <View style={styles.listItem}>
-                <Text>{props.title}</Text>
+                <Text>{props.expenses}</Text>
                 <Link href={{ pathname: "/detail", params: { id: props.id } }}>
                     <Text>Detail</Text>
                 </Link>
@@ -89,7 +90,7 @@ export default function Home(props: any) {
 
     const renderItem = ({ item }: any) => {
         return (
-            <ListItem title={item.title} id={item.id} />
+            <ListItem expenses={item.expenses} id={item.id} />
         )
     }
 
@@ -118,10 +119,10 @@ export default function Home(props: any) {
             >
                 <View style={styles.modal}>
                     <View style={styles.modalContainer}>
-                        <Text>Enter title</Text>
-                        <TextInput style={styles.modalInput} value={title} onChangeText={(val) => setTitle(val)} />
-                        <Text>Enter Number</Text>
-                        <TextInput style={styles.modalInput} inputMode="numeric" value={number} onChangeText={(val) => setNumber(val)} />
+                        <Text>Enter Expenses</Text>
+                        <TextInput style={styles.modalInput} value={expenses} onChangeText={(val) => setExpenses(val)} />
+                        <Text>Enter Amount</Text>
+                        <TextInput style={styles.modalInput} inputMode="numeric" value={amount} onChangeText={(val) => setAmount(val)} />
                         <Pressable
                             style={styles.addItemButton}
                             onPress={() => {
@@ -129,7 +130,7 @@ export default function Home(props: any) {
                                 setModalVisible(false)
                             }
                             }>
-                            <Text style={styles.addItemText}>Add Item</Text>
+                            <Text style={styles.addItemText}>Add Expenses</Text>
                         </Pressable>
                     </View>
                     <Pressable style={styles.modalClose} onPress={() => setModalVisible(false)}>
@@ -139,8 +140,8 @@ export default function Home(props: any) {
             </Modal>
         </View>
     )
-
 }
+
 
 const styles = StyleSheet.create({
     container: {
@@ -180,7 +181,6 @@ const styles = StyleSheet.create({
     },
     modal: {
         padding: 20,
-        // backgroundColor: "hsla(0, 0%, 0%, 0.4)",
         flex: 1,
     },
     modalClose: {
@@ -208,4 +208,18 @@ const styles = StyleSheet.create({
         padding: 8,
         marginBottom: 20,
     },
-})
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    themeButton: {
+        padding: 10,
+        backgroundColor: '#ccc', // Base button color
+        borderRadius: 5,
+        marginTop: 20,
+    },
+    themeButtonText: {
+        color: '#333', // Base button text color
+    },
+});

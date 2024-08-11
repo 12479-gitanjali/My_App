@@ -1,31 +1,42 @@
-import { Tabs } from "expo-router";
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+// app/_layout.tsx
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { NavigationContainer } from '@react-navigation/native';
+import HomeScreen from './Home';
+import AccountScreen from './account';
+import SettingsScreen from './setting';
+import { FontAwesome5 } from '@expo/vector-icons';
 
-export default function TabLayout() {
+const Tab = createBottomTabNavigator();
+
+const AppLayout = () => {
     return (
-      <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
-        <Tabs.Screen
-          name="Home"
-          options={{
-            title: 'Home',
-            tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="account"
-          options={{
-            title: 'Account',
-            tabBarIcon: ({ color }) => <FontAwesome size={28} name="plus-circle" color={color} />,
-          }}
-        />
+        <NavigationContainer>
+            <Tab.Navigator
+                screenOptions={({ route }) => ({
+                    tabBarIcon: ({ color, size }) => {
+                        let iconName;
 
-        <Tabs.Screen
-          name="setting"
-          options={{
-            title: 'Setting',
-            tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
-          }}
-        />
-      </Tabs>
+                        if (route.name === 'Home') {
+                            iconName = 'home';
+                        } else if (route.name === 'Account') {
+                            iconName = 'user-circle';
+                        } else if (route.name === 'Settings') {
+                            iconName = 'cog';
+                        }
+
+                        return <FontAwesome5 name={iconName} size={size} color={color} />;
+                    },
+                    tabBarActiveTintColor: 'tomato',
+                    tabBarInactiveTintColor: 'gray',
+                })}
+            >
+                <Tab.Screen name="Home" component={HomeScreen} />
+                <Tab.Screen name="Account" component={AccountScreen} />
+                <Tab.Screen name="Settings" component={SettingsScreen} />
+            </Tab.Navigator>
+            </NavigationContainer>
     );
-  }
+};
+
+export default AppLayout;

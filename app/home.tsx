@@ -5,10 +5,11 @@ import { DbContext } from '@/contexts/DbContext';
 import { collection, addDoc, query, onSnapshot } from "firebase/firestore";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; // Changed import
+import { ThemeProvider, useNavigation } from '@react-navigation/native'; // Changed import
 import { Link } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { SignOutButton } from '@/components/SignOutButton';
+
 
 const Tab = createBottomTabNavigator();
 
@@ -52,12 +53,12 @@ const HomeScreen = () => {
             expenses: expenses
         }
         const authUser = auth.currentUser.uid
-        const path = `users/${authUser}/items`
+        const path = `users/${authUser}/expenses`
         const docRef = await addDoc(collection(db, path), data)
     }
 
     const fetchData = async () => {
-        const path = `users/${auth.currentUser.uid}/items`
+        const path = `users/${auth.currentUser.uid}/expenses`
         const q = query(collection(db, path))
         const unsub = onSnapshot(q, (querySnapshot) => {
             let items: any = []
@@ -74,7 +75,8 @@ const HomeScreen = () => {
     const ListItem = (props: any) => {
         return (
             <View style={styles.listItem}>
-                <Text>{props.expenses}</Text>
+                <Text style={styles.expenseText}>{props.expenses}</Text>
+                <Text style={styles.amountText}>${props.amount}</Text>
                 <Link href={{ pathname: "/detail", params: { id: props.id } }}>
                     <Text>Detail</Text>
                 </Link>
@@ -90,7 +92,7 @@ const HomeScreen = () => {
 
     const renderItem = ({ item }: any) => {
         return (
-            <ListItem expenses={item.expenses} id={item.id} />
+            <ListItem expenses={item.expenses} amount={item.amount} id={item.id} />
         )
     }
 
@@ -182,12 +184,12 @@ const AccountScreen = () => {
             income: income
         }
         const authUser = auth.currentUser.uid
-        const path = `users/${authUser}/items`
+        const path = `users/${authUser}/income`
         const docRef = await addDoc(collection(db, path), data)
     }
 
     const fetchData = async () => {
-        const path = `users/${auth.currentUser.uid}/items`
+        const path = `users/${auth.currentUser.uid}/income`
         const q = query(collection(db, path))
         const unsub = onSnapshot(q, (querySnapshot) => {
             let items: any = []
@@ -204,8 +206,9 @@ const AccountScreen = () => {
     const ListItem = (props: any) => {
         return (
             <View style={styles.listItem}>
-                <Text>{props.income}</Text>
-                <Link href={{ pathname: "/detail", params: { id: props.id } }}>
+                <Text style={styles.expenseText}>{props.income}</Text>
+                <Text style={styles.amountText}>${props.amount}</Text>
+                <Link href={{ pathname: "/incomedetails", params: { id: props.id } }}>
                     <Text>Detail</Text>
                 </Link>
             </View>
@@ -220,7 +223,7 @@ const AccountScreen = () => {
 
     const renderItem = ({ item }: any) => {
         return (
-            <ListItem expenses={item.expenses} id={item.id} />
+            <ListItem income={item.income} amount={item.amount} id={item.id} />
         )
     }
 
@@ -249,7 +252,7 @@ const AccountScreen = () => {
             >
                 <View style={styles.modal}>
                     <View style={styles.modalContainer}>
-                        <Text>Enter Expenses</Text>
+                        <Text>Enter Income</Text>
                         <TextInput style={styles.modalInput} value={income} onChangeText={(val) => setIncome(val)} />
                         <Text>Enter Amount</Text>
                         <TextInput style={styles.modalInput} inputMode="numeric" value={amount} onChangeText={(val) => setAmount(val)} />
@@ -273,6 +276,7 @@ const AccountScreen = () => {
 };
 
 const SettingScreen = () => {
+
     const auth = useContext(AuthContext)
     const db = useContext(DbContext)
     const router = useRouter()
@@ -396,5 +400,14 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    expenseText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    amountText: {
+        fontSize: 14,
+        color: 'gray',
+        marginBottom: 5 // Adjust margin as needed
     },
 });

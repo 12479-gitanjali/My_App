@@ -1,110 +1,114 @@
-import { SignOutButton } from "@/components/SignOutButton"
-import { AuthContext } from "@/contexts/AuthContext"
-import { DbContext } from "@/contexts/DbContext"
-import { Ionicons } from "@expo/vector-icons"
-import { Link, useNavigation, useRouter } from "expo-router"
-import { addDoc, collection, query, onSnapshot } from "firebase/firestore"
-import React from "react"
-import { useContext, useEffect, useState } from "react"
+import { SignOutButton } from "@/components/SignOutButton";
+import { AuthContext } from "@/contexts/AuthContext";
+import { DbContext } from "@/contexts/DbContext";
+import { ThemeContext } from "@/contexts/ThemeContext"; // Import ThemeContext
+import { Ionicons } from "@expo/vector-icons";
+import { Link, useNavigation, useRouter } from "expo-router";
+import { addDoc, collection, query, onSnapshot } from "firebase/firestore";
+import React, { useContext, useEffect, useState } from "react";
 import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput } from 'react-native';
 
 export default function Expenses() {
-    const auth = useContext(AuthContext)
-    const db = useContext(DbContext)
-    const router = useRouter()
-    const navigation = useNavigation()
+    const auth = useContext(AuthContext);
+    const db = useContext(DbContext);
+    const { theme } = useContext(ThemeContext); // Consume ThemeContext
+    const router = useRouter();
+    const navigation = useNavigation();
 
-    const [data, setData] = useState([])
-    const [loaded, setLoaded] = useState(false)
-    const [modalVisible, setModalVisible] = useState(false)
-    const [expenses, setExpenses] = useState('')
-    const [amount, setAmount] = useState('')
+    const [data, setData] = useState([]);
+    const [loaded, setLoaded] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [expenses, setExpenses] = useState('');
+    const [amount, setAmount] = useState('');
     const [totalExpenses, setTotalExpenses] = useState(0);
 
-    // showing the header via setOptions()
+    // Show the header via setOptions()
     useEffect(() => {
         navigation.setOptions({
             headerShown: true,
             headerRight: () => <SignOutButton />
-        })
-    }, [navigation])
+        });
+    }, [navigation]);
 
     useEffect(() => {
-        if (loaded == false) {
-            fetchData()
-            setLoaded(true)
+        if (!loaded) {
+            fetchData();
+            setLoaded(true);
         }
-    }, [data, auth])
+    }, [data, auth]);
 
-    useEffect( () => {
-        setExpenses('')
-        setAmount('')
-    }, [modalVisible])
+    useEffect(() => {
+        setExpenses('');
+        setAmount('');
+    }, [modalVisible]);
 
     useEffect(() => {
         const total = data.reduce((sum, item) => sum + item.amount, 0);
         setTotalExpenses(total);
     }, [data]);
 
-
     const addData = async () => {
         const data = {
             time: new Date().getTime(),
             amount: parseInt(amount),
             expenses: expenses
-        }
-        const authUser = auth.currentUser.uid
-        const path = `users/${authUser}/expenses`
-        const docRef = await addDoc(collection(db, path), data)
-    }
+        };
+        const authUser = auth.currentUser.uid;
+        const path = `users/${authUser}/expenses`;
+        const docRef = await addDoc(collection(db, path), data);
+        await addDoc(collection(db, `users/${authUser}/notifications`), {
+            message: `Expense "${expenses}" of $${amount} added.`,
+            date: new Date(),
+            type: 'expense',
+            expenseId: docRef.id, 
+        });
+    };
 
     const fetchData = async () => {
-        const path = `users/${auth.currentUser.uid}/expenses`
-        const q = query(collection(db, path))
-        const unsub = onSnapshot(q, (querySnapshot) => {
-            let items: any = []
+        const path = `users/${auth.currentUser.uid}/expenses`;
+        const q = query(collection(db, path));
+        onSnapshot(q, (querySnapshot) => {
+            let items = [];
             querySnapshot.forEach((doc) => {
-                let item = doc.data()
-                item.id = doc.id
-                items.push(item)
-            })
-            setData(items)
-        })
+                let item = doc.data();
+                item.id = doc.id;
+                items.push(item);
+            });
+            setData(items);
+        });
+    };
 
-    }
-
-    const ListItem = (props: any) => {
+    const ListItem = (props) => {
         return (
-            <View style={styles.listItem}>
-                <Text style={styles.expenseText}>{props.expenses}</Text>
-                <Text style={styles.amountText}>${props.amount}</Text>
+            <View style={[styles.listItem, { backgroundColor: theme === 'light' ? "#15bfe6" : "#555" }]}>
+                <Text style={[styles.expenseText, { color: theme === 'light' ? '#000' : '#fff' }]}>{props.expenses}</Text>
+                <Text style={[styles.amountText, { color: theme === 'light' ? 'gray' : '#ccc' }]}>${props.amount}</Text>
                 <Link href={{ pathname: "/detail", params: { id: props.id } }}>
-                    <Text>Detail</Text>
+                    <Text style={{ color: theme === 'light' ? '#000' : '#fff' }}>Detail</Text>
                 </Link>
             </View>
-        )
-    }
+        );
+    };
 
     const Separator = () => {
         return (
             <View style={styles.separator}></View>
-        )
-    }
+        );
+    };
 
-    const renderItem = ({ item }: any) => {
+    const renderItem = ({ item }) => {
         return (
             <ListItem expenses={item.expenses} amount={item.amount} id={item.id} />
-        )
-    }
+        );
+    };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.totalContainer}>
-                <Text style={styles.totalText}>Total Expenses: ${totalExpenses}</Text>
+        <View style={[styles.container, { backgroundColor: theme === 'light' ? '#fff' : '#333' }]}>
+            <View style={[styles.totalContainer, { backgroundColor: theme === 'light' ? "#FFC300" : "#1a1a1a" }]}>
+                <Text style={[styles.totalText, { color: theme === 'light' ? '#000' : '#fff' }]}>Total Expenses: ${totalExpenses}</Text>
             </View>
             <Pressable
                 style={styles.addButton}
-                //onPress={() => addData()} 
                 onPress={() => setModalVisible(true)}
             >
                 <Text style={styles.addButtonText}>
@@ -114,7 +118,7 @@ export default function Expenses() {
             <FlatList
                 data={data}
                 renderItem={renderItem}
-                keyExtractor={(item: any) => item.id}
+                keyExtractor={(item) => item.id}
                 ItemSeparatorComponent={Separator}
                 style={styles.list}
             />
@@ -123,24 +127,37 @@ export default function Expenses() {
                 transparent={false}
                 visible={modalVisible}
             >
-                <View style={styles.modal}>
+                <View style={[styles.modal, { backgroundColor: theme === 'light' ? '#fff' : '#333' }]}>
                     <View style={styles.modalContainer}>
-                        <Text>Enter Expenses</Text>
-                        <TextInput style={styles.modalInput} value={expenses} onChangeText={(val) => setExpenses(val)} />
-                        <Text>Enter Amount</Text>
-                        <TextInput style={styles.modalInput} inputMode="numeric" value={amount} onChangeText={(val) => setAmount(val)} />
+                        <Text style={{ color: theme === 'light' ? '#000' : '#fff' }}>Enter Expenses</Text>
+                        <TextInput 
+                            style={styles.modalInput} 
+                            value={expenses} 
+                            onChangeText={(val) => setExpenses(val)} 
+                            placeholder="Enter expenses"
+                            placeholderTextColor={theme === 'light' ? '#aaa' : '#777'}
+                        />
+                        <Text style={{ color: theme === 'light' ? '#000' : '#fff' }}>Enter Amount</Text>
+                        <TextInput 
+                            style={styles.modalInput} 
+                            inputMode="numeric" 
+                            value={amount} 
+                            onChangeText={(val) => setAmount(val)} 
+                            placeholder="Enter amount"
+                            placeholderTextColor={theme === 'light' ? '#aaa' : '#777'}
+                        />
                         <Pressable
                             style={styles.addItemButton}
                             onPress={() => {
-                                addData()
-                                setModalVisible(false)
-                            }
-                            }>
+                                addData();
+                                setModalVisible(false);
+                            }}
+                        >
                             <Text style={styles.addItemText}>Add Expenses</Text>
                         </Pressable>
                     </View>
                     <Pressable style={styles.modalClose} onPress={() => setModalVisible(false)}>
-                        <Text>Close</Text>
+                        <Text style={{ color: theme === 'light' ? '#000' : '#fff' }}>Close</Text>
                     </Pressable>
                 </View>
             </Modal>
@@ -172,7 +189,6 @@ const styles = StyleSheet.create({
         fontSize: 30,
     },
     listItem: {
-        backgroundColor: "#15bfe6",
         padding: 10,
         flexDirection: "row",
         justifyContent: "space-between",
@@ -235,7 +251,6 @@ const styles = StyleSheet.create({
     },
     totalContainer: {
         padding: 20,
-        backgroundColor: "#FFC300",
         alignItems: "center",
         marginBottom: 20,
         borderRadius: 20, 
@@ -251,5 +266,4 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
     },
-    
 });

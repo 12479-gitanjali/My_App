@@ -1,6 +1,7 @@
 import { SignOutButton } from "@/components/SignOutButton";
 import { AuthContext } from "@/contexts/AuthContext";
 import { DbContext } from "@/contexts/DbContext";
+import { ThemeContext } from "@/contexts/ThemeContext"; // Import ThemeContext
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useNavigation, useRouter } from "expo-router";
 import { addDoc, collection, query, onSnapshot } from "firebase/firestore";
@@ -11,6 +12,7 @@ import { PieChart } from "react-native-chart-kit";
 export default function Home() {
     const auth = useContext(AuthContext);
     const db = useContext(DbContext);
+    const { theme } = useContext(ThemeContext); // Consume ThemeContext
     const router = useRouter();
     const navigation = useNavigation();
 
@@ -20,7 +22,7 @@ export default function Home() {
     const [totalExpenses, setTotalExpenses] = useState(0);
     const [totalIncome, setTotalIncome] = useState(0);
     const [remainingAmount, setRemainingAmount] = useState(0);
-
+    
     useEffect(() => {
         navigation.setOptions({
             headerShown: true,
@@ -94,9 +96,9 @@ export default function Home() {
     ];
 
     const renderTransactionItem = ({ item }) => (
-        <View style={styles.transactionItem}>
-            <Text style={styles.transactionText}>{item.description || item.income}</Text>
-            <Text style={styles.transactionAmount}>${item.amount}</Text>
+        <View style={[styles.transactionItem, { backgroundColor: theme === 'light' ? "#f2f2f2" : "#555" }]}>
+            <Text style={[styles.transactionText, { color: theme === 'light' ? '#000' : '#fff' }]}>{item.description || item.income}</Text>
+            <Text style={[styles.transactionAmount, { color: theme === 'light' ? 'gray' : '#ccc' }]}>${item.amount}</Text>
         </View>
     );
 
@@ -106,8 +108,8 @@ export default function Home() {
     ];
 
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.remainingContainer}>
+        <ScrollView style={[styles.container, { backgroundColor: theme === 'light' ? '#fff' : '#333' }]}>
+            <View style={[styles.remainingContainer, { backgroundColor: theme === 'light' ? "#15bfe6" : "#1a1a1a" }]}>
                 <Text style={styles.remainingText}>Remaining Amount: ${remainingAmount}</Text>
                 <View style={styles.innerContainer}>
                     <View style={styles.innerBoxExpenses}>
@@ -128,9 +130,9 @@ export default function Home() {
                         width={400}
                         height={220}
                         chartConfig={{
-                            backgroundColor: "#fff",
-                            backgroundGradientFrom: "#fff",
-                            backgroundGradientTo: "#fff",
+                            backgroundColor: theme === 'light' ? "#fff" : "#333",
+                            backgroundGradientFrom: theme === 'light' ? "#fff" : "#333",
+                            backgroundGradientTo: theme === 'light' ? "#fff" : "#333",
                             color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                             labelColor: () => `#000000`,
                             style: {
@@ -145,7 +147,7 @@ export default function Home() {
                 </View>
             </View>
 
-            <Text style={styles.transactionListTitle}>Transaction List</Text>
+            <Text style={[styles.transactionListTitle, { color: theme === 'light' ? '#000' : '#fff' }]}>Transaction List</Text>
             <FlatList
                 data={transactionList}
                 renderItem={renderTransactionItem}
@@ -163,7 +165,6 @@ const styles = StyleSheet.create({
     },
     remainingContainer: {
         padding: 20,
-        backgroundColor: "#15bfe6",
         alignItems: "center",
         borderRadius: 10,
         elevation: 4,
@@ -219,7 +220,6 @@ const styles = StyleSheet.create({
     pieChartWrapper: {
         width: '100%',
         padding: 20,
-        backgroundColor: '#D0D0D0',
         borderRadius: 10,
         elevation: 2,
         shadowColor: '#000',
@@ -242,7 +242,6 @@ const styles = StyleSheet.create({
         padding: 10,
         flexDirection: "row",
         justifyContent: "space-between",
-        backgroundColor: "#f2f2f2",
         borderRadius: 8,
         marginVertical: 5,
         paddingHorizontal: 15,
@@ -258,6 +257,5 @@ const styles = StyleSheet.create({
     },
     transactionAmount: {
         fontSize: 16,
-        color: 'gray',
     },
 });

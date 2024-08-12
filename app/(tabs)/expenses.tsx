@@ -1,18 +1,14 @@
-import React, { useContext, useEffect, useState } from 'react';
+import { SignOutButton } from "@/components/SignOutButton"
+import { AuthContext } from "@/contexts/AuthContext"
+import { DbContext } from "@/contexts/DbContext"
+import { Ionicons } from "@expo/vector-icons"
+import { Link, useNavigation, useRouter } from "expo-router"
+import { addDoc, collection, query, onSnapshot } from "firebase/firestore"
+import React from "react"
+import { useContext, useEffect, useState } from "react"
 import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput } from 'react-native';
-import { AuthContext } from '@/contexts/AuthContext';
-import { DbContext } from '@/contexts/DbContext';
-import { collection, addDoc, query, onSnapshot } from "firebase/firestore";
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; // Changed import
-import { Link } from 'expo-router';
-import { useRouter } from 'expo-router';
-import { SignOutButton } from '@/components/SignOutButton';
 
-const Tab = createBottomTabNavigator();
-
-const AccountScreen = () => {
+export default function Expenses() {
     const auth = useContext(AuthContext)
     const db = useContext(DbContext)
     const router = useRouter()
@@ -21,8 +17,9 @@ const AccountScreen = () => {
     const [data, setData] = useState([])
     const [loaded, setLoaded] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
-    const [income, setIncome] = useState('')
+    const [expenses, setExpenses] = useState('')
     const [amount, setAmount] = useState('')
+    const [totalExpenses, setTotalExpenses] = useState(0);
 
     // showing the header via setOptions()
     useEffect(() => {
@@ -40,24 +37,29 @@ const AccountScreen = () => {
     }, [data, auth])
 
     useEffect( () => {
-        setIncome('')
+        setExpenses('')
         setAmount('')
     }, [modalVisible])
+
+    useEffect(() => {
+        const total = data.reduce((sum, item) => sum + item.amount, 0);
+        setTotalExpenses(total);
+    }, [data]);
 
 
     const addData = async () => {
         const data = {
             time: new Date().getTime(),
             amount: parseInt(amount),
-            income: income
+            expenses: expenses
         }
         const authUser = auth.currentUser.uid
-        const path = `users/${authUser}/income`
+        const path = `users/${authUser}/expenses`
         const docRef = await addDoc(collection(db, path), data)
     }
 
     const fetchData = async () => {
-        const path = `users/${auth.currentUser.uid}/income`
+        const path = `users/${auth.currentUser.uid}/expenses`
         const q = query(collection(db, path))
         const unsub = onSnapshot(q, (querySnapshot) => {
             let items: any = []
@@ -74,8 +76,9 @@ const AccountScreen = () => {
     const ListItem = (props: any) => {
         return (
             <View style={styles.listItem}>
-                <Text>{props.income}</Text>
-                <Link href={{ pathname: "/incomedetails", params: { id: props.id } }}>
+                <Text style={styles.expenseText}>{props.expenses}</Text>
+                <Text style={styles.amountText}>${props.amount}</Text>
+                <Link href={{ pathname: "/detail", params: { id: props.id } }}>
                     <Text>Detail</Text>
                 </Link>
             </View>
@@ -90,12 +93,15 @@ const AccountScreen = () => {
 
     const renderItem = ({ item }: any) => {
         return (
-            <ListItem income={item.income} id={item.id} />
+            <ListItem expenses={item.expenses} amount={item.amount} id={item.id} />
         )
     }
 
     return (
         <View style={styles.container}>
+            <View style={styles.totalContainer}>
+                <Text style={styles.totalText}>Total Expenses: ${totalExpenses}</Text>
+            </View>
             <Pressable
                 style={styles.addButton}
                 //onPress={() => addData()} 
@@ -119,8 +125,8 @@ const AccountScreen = () => {
             >
                 <View style={styles.modal}>
                     <View style={styles.modalContainer}>
-                        <Text>Enter Income</Text>
-                        <TextInput style={styles.modalInput} value={income} onChangeText={(val) => setIncome(val)} />
+                        <Text>Enter Expenses</Text>
+                        <TextInput style={styles.modalInput} value={expenses} onChangeText={(val) => setExpenses(val)} />
                         <Text>Enter Amount</Text>
                         <TextInput style={styles.modalInput} inputMode="numeric" value={amount} onChangeText={(val) => setAmount(val)} />
                         <Pressable
@@ -130,7 +136,7 @@ const AccountScreen = () => {
                                 setModalVisible(false)
                             }
                             }>
-                            <Text style={styles.addItemText}>Add Income</Text>
+                            <Text style={styles.addItemText}>Add Expenses</Text>
                         </Pressable>
                     </View>
                     <Pressable style={styles.modalClose} onPress={() => setModalVisible(false)}>
@@ -139,9 +145,8 @@ const AccountScreen = () => {
                 </View>
             </Modal>
         </View>
-    )
-};
-
+    );
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -167,17 +172,23 @@ const styles = StyleSheet.create({
         fontSize: 30,
     },
     listItem: {
-        backgroundColor: "#CCCCCC",
+        backgroundColor: "#15bfe6",
         padding: 10,
         flexDirection: "row",
-        justifyContent: "space-between"
+        justifyContent: "space-between",
+        borderRadius: 10, 
+        elevation: 4, 
+        shadowColor: '#000', 
+        shadowOffset: { width: 0, height: 2 }, 
+        shadowOpacity: 0.3, 
+        shadowRadius: 4, 
     },
     separator: {
         backgroundColor: "#EEEEEE",
-        height: 3,
+        height: 4,
     },
     list: {
-        flex: 1,
+        flex: 12,
     },
     modal: {
         padding: 20,
@@ -193,12 +204,12 @@ const styles = StyleSheet.create({
         marginVertical: 50
     },
     addItemButton: {
-        backgroundColor: "#333333",
+        backgroundColor: "#12ed0e",
         padding: 8,
         alignSelf: "center",
     },
     addItemText: {
-        color: "#CCCCCC",
+        color: "#0c120c",
         textAlign: "center",
     },
     modalInput: {
@@ -213,13 +224,32 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    themeButton: {
-        padding: 10,
-        backgroundColor: '#ccc', // Base button color
-        borderRadius: 5,
+    expenseText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    amountText: {
+        fontSize: 14,
+        color: 'gray',
+        marginBottom: 5 // Adjust margin as needed
+    },
+    totalContainer: {
+        padding: 20,
+        backgroundColor: "#FFC300",
+        alignItems: "center",
+        marginBottom: 20,
+        borderRadius: 20, 
+        elevation: 6, 
+        shadowColor: '#000', 
+        shadowOffset: { width: 0, height: 2 }, 
+        shadowOpacity: 0.3, 
+        shadowRadius: 4, 
         marginTop: 20,
+        marginHorizontal: 10,
     },
-    themeButtonText: {
-        color: '#333', // Base button text color
+    totalText: {
+        fontSize: 20,
+        fontWeight: 'bold',
     },
+    
 });

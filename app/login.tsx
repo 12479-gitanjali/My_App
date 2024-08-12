@@ -6,6 +6,7 @@ import { AuthContext } from '@/contexts/AuthContext'
 import { useContext, useState } from 'react'
 import { useRouter } from 'expo-router'
 import { ErrorMessage } from '@/components/ErrorMessage'
+import React from 'react'
 
 export default function Login(props: any) {
     const auth = useContext( AuthContext )

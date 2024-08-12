@@ -1,42 +1,53 @@
-// app/_layout.tsx
-import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-import HomeScreen from './Home';
-import AccountScreen from './account';
-import SettingsScreen from './setting';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { Tabs } from "expo-router";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
+import { AntDesign } from '@expo/vector-icons';
+import React from "react";
 
-const Tab = createBottomTabNavigator();
-
-const AppLayout = () => {
-    return (
-        <NavigationContainer>
-            <Tab.Navigator
-                screenOptions={({ route }) => ({
-                    tabBarIcon: ({ color, size }) => {
-                        let iconName;
-
-                        if (route.name === 'Home') {
-                            iconName = 'home';
-                        } else if (route.name === 'Account') {
-                            iconName = 'user-circle';
-                        } else if (route.name === 'Settings') {
-                            iconName = 'cog';
-                        }
-
-                        return <FontAwesome5 name={iconName} size={size} color={color} />;
-                    },
-                    tabBarActiveTintColor: 'tomato',
-                    tabBarInactiveTintColor: 'gray',
-                })}
-            >
-                <Tab.Screen name="Home" component={HomeScreen} />
-                <Tab.Screen name="Account" component={AccountScreen} />
-                <Tab.Screen name="Settings" component={SettingsScreen} />
-            </Tab.Navigator>
-            </NavigationContainer>
-    );
-};
-
-export default AppLayout;
+export default function TabsLayout() {
+  return (
+    <Tabs
+      screenOptions={{ tabBarActiveTintColor: "#ff7157" }}
+    >
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: "Home",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="home" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="expenses"
+        options={{
+          title: "Expenses",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome5 name="wallet" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="income"
+        options={{
+          title: "Income",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="plus-circle" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="setting"
+        options={{
+          title: "Setting",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="cog" size={24} color={color} />
+          ),
+        }}
+      />
+    </Tabs>
+  );
+}

@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native'
 import { useEffect, useState } from 'react'
+import React from 'react'
 
 export function ErrorMessage( props:any ) {
     const[ message, setMessage ] = useState('')

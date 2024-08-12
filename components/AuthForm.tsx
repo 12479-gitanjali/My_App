@@ -1,5 +1,6 @@
 import { Text, TextInput, StyleSheet, View, Pressable } from 'react-native'
 import { useState, useEffect } from 'react' 
+import React from 'react'
 
 export function AuthForm ( props:any ) {
     const[ email, setEmail ] = useState('')

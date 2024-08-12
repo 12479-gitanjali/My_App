@@ -6,7 +6,8 @@ import { getAuth } from '@firebase/auth'
 import { AuthContext } from '@/contexts/AuthContext';
 import { DbContext } from '@/contexts/DbContext';
 import { getFirestore } from '@firebase/firestore'
-import { blue } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
+import React from 'react';
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 
 export default function RootLayout() {
@@ -20,16 +21,11 @@ export default function RootLayout() {
   return (
     <AuthContext.Provider value={FBauth}>
       <DbContext.Provider value={FBdb}>
-        <SafeAreaView style={styles.container}>
-        <Stack>
-       {/* <Stack  screenOptions={{headerShown: false}}/>  */}
-      <Stack.Screen name="(tabs)" options={{
-        headerShown:false,
-      }
-      }/>
-      {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} /> */}
-    </Stack>
-        </SafeAreaView>
+      <GestureHandlerRootView style={styles.container}>
+          <SafeAreaView style={styles.container}>
+            <Stack screenOptions={{ headerShown: false }} />
+          </SafeAreaView>
+        </GestureHandlerRootView>
       </DbContext.Provider>
     </AuthContext.Provider>
 

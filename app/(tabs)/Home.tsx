@@ -1,225 +1,263 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput } from 'react-native';
-import { AuthContext } from '@/contexts/AuthContext';
-import { DbContext } from '@/contexts/DbContext';
-import { collection, addDoc, query, onSnapshot } from "firebase/firestore";
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; // Changed import
-import { Link } from 'expo-router';
-import { useRouter } from 'expo-router';
-import { SignOutButton } from '@/components/SignOutButton';
+import { SignOutButton } from "@/components/SignOutButton";
+import { AuthContext } from "@/contexts/AuthContext";
+import { DbContext } from "@/contexts/DbContext";
+import { Ionicons } from "@expo/vector-icons";
+import { Link, useNavigation, useRouter } from "expo-router";
+import { addDoc, collection, query, onSnapshot } from "firebase/firestore";
+import React, { useContext, useEffect, useState } from "react";
+import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
+import { PieChart } from "react-native-chart-kit";
 
-const Tab = createBottomTabNavigator();
+export default function Home() {
+    const auth = useContext(AuthContext);
+    const db = useContext(DbContext);
+    const router = useRouter();
+    const navigation = useNavigation();
 
-const HomeScreen = () => {
-    const auth = useContext(AuthContext)
-    const db = useContext(DbContext)
-    const router = useRouter()
-    const navigation = useNavigation()
+    const [data, setData] = useState([]); // for expenses
+    const [incomeData, setIncomeData] = useState([]); // for income
+    const [loaded, setLoaded] = useState(false);
+    const [totalExpenses, setTotalExpenses] = useState(0);
+    const [totalIncome, setTotalIncome] = useState(0);
+    const [remainingAmount, setRemainingAmount] = useState(0);
 
-    const [data, setData] = useState([])
-    const [loaded, setLoaded] = useState(false)
-    const [modalVisible, setModalVisible] = useState(false)
-    const [expenses, setExpenses] = useState('')
-    const [amount, setAmount] = useState('')
-
-    // showing the header via setOptions()
     useEffect(() => {
         navigation.setOptions({
             headerShown: true,
             headerRight: () => <SignOutButton />
-        })
-    }, [navigation])
+        });
+    }, [navigation]);
 
     useEffect(() => {
-        if (loaded == false) {
-            fetchData()
-            setLoaded(true)
+        if (!loaded) {
+            fetchData();
+            fetchIncomeData();
+            setLoaded(true);
         }
-    }, [data, auth])
+    }, [data, auth]);
 
-    useEffect( () => {
-        setExpenses('')
-        setAmount('')
-    }, [modalVisible])
+    useEffect(() => {
+        const totalExp = data.reduce((sum, item) => sum + item.amount, 0);
+        setTotalExpenses(totalExp);
+        setRemainingAmount(totalIncome - totalExp);
+    }, [data, totalIncome]);
 
-
-    const addData = async () => {
-        const data = {
-            time: new Date().getTime(),
-            amount: parseInt(amount),
-            expenses: expenses
-        }
-        const authUser = auth.currentUser.uid
-        const path = `users/${authUser}/expenses`
-        const docRef = await addDoc(collection(db, path), data)
-    }
+    useEffect(() => {
+        const totalInc = incomeData.reduce((sum, item) => sum + item.amount, 0);
+        setTotalIncome(totalInc);
+        setRemainingAmount(totalInc - totalExpenses);
+    }, [incomeData, totalExpenses]);
 
     const fetchData = async () => {
-        const path = `users/${auth.currentUser.uid}/expenses`
-        const q = query(collection(db, path))
-        const unsub = onSnapshot(q, (querySnapshot) => {
-            let items: any = []
+        const path = `users/${auth.currentUser.uid}/expenses`;
+        const q = query(collection(db, path));
+        onSnapshot(q, (querySnapshot) => {
+            let items = [];
             querySnapshot.forEach((doc) => {
-                let item = doc.data()
-                item.id = doc.id
-                items.push(item)
-            })
-            setData(items)
-        })
+                let item = doc.data();
+                item.id = doc.id;
+                items.push(item);
+            });
+            setData(items);
+        });
+    };
 
-    }
+    const fetchIncomeData = async () => {
+        const path = `users/${auth.currentUser.uid}/income`;
+        const q = query(collection(db, path));
+        onSnapshot(q, (querySnapshot) => {
+            let items = [];
+            querySnapshot.forEach((doc) => {
+                let item = doc.data();
+                item.id = doc.id;
+                items.push(item);
+            });
+            setIncomeData(items);
+        });
+    };
 
-    const ListItem = (props: any) => {
-        return (
-            <View style={styles.listItem}>
-                <Text>{props.expenses}</Text>
-                <Link href={{ pathname: "/detail", params: { id: props.id } }}>
-                    <Text>Detail</Text>
-                </Link>
-            </View>
-        )
-    }
+    const chartData = [
+        {
+            name: "Expenses",
+            amount: totalExpenses,
+            color: "#FFC300",
+            legendFontColor: "#000000",
+            legendFontSize: 15,
+        },
+        {
+            name: "Income",
+            amount: totalIncome,
+            color: "#59D304",
+            legendFontColor: "#000000",
+            legendFontSize: 15,
+        },
+    ];
 
-    const Separator = () => {
-        return (
-            <View style={styles.separator}></View>
-        )
-    }
+    const renderTransactionItem = ({ item }) => (
+        <View style={styles.transactionItem}>
+            <Text style={styles.transactionText}>{item.description || item.income}</Text>
+            <Text style={styles.transactionAmount}>${item.amount}</Text>
+        </View>
+    );
 
-    const renderItem = ({ item }: any) => {
-        return (
-            <ListItem expenses={item.expenses} id={item.id} />
-        )
-    }
+    const transactionList = [
+        ...data.map(expense => ({ ...expense, description: expense.expenses })),
+        ...incomeData.map(income => ({ ...income, description: income.income })),
+    ];
 
     return (
-        <View style={styles.container}>
-            <Pressable
-                style={styles.addButton}
-                //onPress={() => addData()} 
-                onPress={() => setModalVisible(true)}
-            >
-                <Text style={styles.addButtonText}>
-                    <Ionicons name="add" size={24} />
-                </Text>
-            </Pressable>
-            <FlatList
-                data={data}
-                renderItem={renderItem}
-                keyExtractor={(item: any) => item.id}
-                ItemSeparatorComponent={Separator}
-                style={styles.list}
-            />
-            <Modal
-                animationType="fade"
-                transparent={false}
-                visible={modalVisible}
-            >
-                <View style={styles.modal}>
-                    <View style={styles.modalContainer}>
-                        <Text>Enter Expenses</Text>
-                        <TextInput style={styles.modalInput} value={expenses} onChangeText={(val) => setExpenses(val)} />
-                        <Text>Enter Amount</Text>
-                        <TextInput style={styles.modalInput} inputMode="numeric" value={amount} onChangeText={(val) => setAmount(val)} />
-                        <Pressable
-                            style={styles.addItemButton}
-                            onPress={() => {
-                                addData()
-                                setModalVisible(false)
-                            }
-                            }>
-                            <Text style={styles.addItemText}>Add Expenses</Text>
-                        </Pressable>
+        <ScrollView style={styles.container}>
+            <View style={styles.remainingContainer}>
+                <Text style={styles.remainingText}>Remaining Amount: ${remainingAmount}</Text>
+                <View style={styles.innerContainer}>
+                    <View style={styles.innerBoxExpenses}>
+                        <Text style={styles.innerText}>Total Expenses</Text>
+                        <Text style={styles.innerAmount}>${totalExpenses}</Text>
                     </View>
-                    <Pressable style={styles.modalClose} onPress={() => setModalVisible(false)}>
-                        <Text>Close</Text>
-                    </Pressable>
+                    <View style={styles.innerBoxIncome}>
+                        <Text style={styles.innerText}>Total Income</Text>
+                        <Text style={styles.innerAmount}>${totalIncome}</Text>
+                    </View>
                 </View>
-            </Modal>
-        </View>
-    )
-}
+            </View>
 
+            <View style={styles.chartContainer}>
+                <View style={styles.pieChartWrapper}>
+                    <PieChart
+                        data={chartData}
+                        width={400}
+                        height={220}
+                        chartConfig={{
+                            backgroundColor: "#fff",
+                            backgroundGradientFrom: "#fff",
+                            backgroundGradientTo: "#fff",
+                            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                            labelColor: () => `#000000`,
+                            style: {
+                                borderRadius: 16,
+                            },
+                        }}
+                        accessor="amount"
+                        backgroundColor="transparent"
+                        paddingLeft="15"
+                        absolute
+                    />
+                </View>
+            </View>
+
+            <Text style={styles.transactionListTitle}>Transaction List</Text>
+            <FlatList
+                data={transactionList}
+                renderItem={renderTransactionItem}
+                keyExtractor={(item) => item.id}
+                style={styles.transactionList}
+            />
+        </ScrollView>
+    );
+}
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        padding: 10,
     },
-    addButton: {
-        backgroundColor: "#333333",
-        padding: 8,
-        alignSelf: "center",
-        width: 40,
-        height: 40,
-        borderRadius: 5,
-        position: "absolute",
-        right: 20,
-        bottom: 20,
-        zIndex: 999,
-        justifyContent: "center",
-        alignItems: "center"
+    remainingContainer: {
+        padding: 20,
+        backgroundColor: "#15bfe6",
+        alignItems: "center",
+        borderRadius: 10,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        marginTop: 20,
+        marginHorizontal: 10,
     },
-    addButtonText: {
-        color: "#eeeeee",
-        textAlign: "center",
-        fontSize: 30,
+    remainingText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
     },
-    listItem: {
-        backgroundColor: "#CCCCCC",
+    innerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginTop: 10,
+    },
+    innerBoxExpenses: {
+        flex: 1,
+        backgroundColor: '#FFC300',
+        padding: 10,
+        borderRadius: 8,
+        marginHorizontal: 5,
+        elevation: 2,
+    },
+    innerBoxIncome: {
+        flex: 1,
+        backgroundColor: '#59D304',
+        padding: 10,
+        borderRadius: 8,
+        marginHorizontal: 5,
+        elevation: 2,
+    },
+    innerText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    innerAmount: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginTop: 5,
+        color: '#000000',
+    },
+    chartContainer: {
+        alignItems: "center",
+        marginTop: 20,
+        borderColor: '#000000',
+    },
+    pieChartWrapper: {
+        width: '100%',
+        padding: 20,
+        backgroundColor: '#D0D0D0',
+        borderRadius: 10,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        borderWidth: 2,
+        borderColor: '#000000',
+    },
+    transactionListTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginTop: 20,
+        marginBottom: 10,
+    },
+    transactionList: {
+        flex: 1,
+    },
+    transactionItem: {
         padding: 10,
         flexDirection: "row",
-        justifyContent: "space-between"
+        justifyContent: "space-between",
+        backgroundColor: "#f2f2f2",
+        borderRadius: 8,
+        marginVertical: 5,
+        paddingHorizontal: 15,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
     },
-    separator: {
-        backgroundColor: "#EEEEEE",
-        height: 3,
+    transactionText: {
+        fontSize: 16,
+        fontWeight: 'bold',
     },
-    list: {
-        flex: 1,
-    },
-    modal: {
-        padding: 20,
-        flex: 1,
-    },
-    modalClose: {
-        position: "absolute",
-        right: 20,
-        top: 20,
-    },
-    modalContainer: {
-        flex: 1,
-        marginVertical: 50
-    },
-    addItemButton: {
-        backgroundColor: "#333333",
-        padding: 8,
-        alignSelf: "center",
-    },
-    addItemText: {
-        color: "#CCCCCC",
-        textAlign: "center",
-    },
-    modalInput: {
-        borderStyle: "solid",
-        borderWidth: 1,
-        borderColor: "#CCCCCC",
-        padding: 8,
-        marginBottom: 20,
-    },
-    centeredView: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    themeButton: {
-        padding: 10,
-        backgroundColor: '#ccc', // Base button color
-        borderRadius: 5,
-        marginTop: 20,
-    },
-    themeButtonText: {
-        color: '#333', // Base button text color
+    transactionAmount: {
+        fontSize: 16,
+        color: 'gray',
     },
 });

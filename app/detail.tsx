@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
         padding: 5,
         borderColor: '#CCCCCC',
         borderStyle: 'solid',
-        backgroundColor: '#83FF2D',
+        backgroundColor: '#d0d4cd',
         fontSize: 16,
         marginBottom: 20,
     },
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     updateEnabled: {
-       backgroundColor: "#1f913b",
+       backgroundColor: "#41f241",
        padding: 10,
        borderRadius: 10,
     },
@@ -133,10 +133,10 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
         padding: 10,
-        backgroundColor: "#c23a3f",
+        backgroundColor: "#db1d29",
         borderRadius: 10,
     },
     buttonText: {
-        color: "#CCCCCC",
+        color: "#0f0f0f",
     }
 })

@@ -6,6 +6,7 @@ import { useContext, useState } from 'react'
 import { createUserWithEmailAndPassword, onAuthStateChanged } from '@firebase/auth'
 import { useRouter } from 'expo-router'
 import { ErrorMessage } from '@/components/ErrorMessage'
+import React from 'react'
 
 export default function Signup(props: any) {
     const auth = useContext(AuthContext)

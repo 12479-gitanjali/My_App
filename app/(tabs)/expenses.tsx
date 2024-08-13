@@ -1,21 +1,28 @@
 import { SignOutButton } from "@/components/SignOutButton";
 import { AuthContext } from "@/contexts/AuthContext";
 import { DbContext } from "@/contexts/DbContext";
-import { ThemeContext } from "@/contexts/ThemeContext"; // Import ThemeContext
+import { useTheme } from "@/contexts/ThemeContext"; // Import ThemeContext
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useNavigation, useRouter } from "expo-router";
 import { addDoc, collection, query, onSnapshot } from "firebase/firestore";
 import React, { useContext, useEffect, useState } from "react";
-import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput, Alert } from 'react-native'; // Import Alert
+
+interface ExpenseItem {
+    id: string;
+    time: number;
+    amount: number;
+    expenses: string;
+}
 
 export default function Expenses() {
     const auth = useContext(AuthContext);
     const db = useContext(DbContext);
-    const { theme } = useContext(ThemeContext); // Consume ThemeContext
+    const { theme } = useTheme();
     const router = useRouter();
     const navigation = useNavigation();
 
-    const [data, setData] = useState([]);
+    const [data, setData] = useState<ExpenseItem[]>([]);
     const [loaded, setLoaded] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [expenses, setExpenses] = useState('');
@@ -48,6 +55,10 @@ export default function Expenses() {
     }, [data]);
 
     const addData = async () => {
+        if (!expenses || !amount) {
+            Alert.alert("Validation Error", "Please enter both expense description and amount.");
+            return; // Exit the function early
+        }
         const data = {
             time: new Date().getTime(),
             amount: parseInt(amount),
@@ -55,35 +66,41 @@ export default function Expenses() {
         };
         const authUser = auth.currentUser.uid;
         const path = `users/${authUser}/expenses`;
-        const docRef = await addDoc(collection(db, path), data);
-        await addDoc(collection(db, `users/${authUser}/notifications`), {
-            message: `Expense "${expenses}" of $${amount} added.`,
-            date: new Date(),
-            type: 'expense',
-            expenseId: docRef.id, 
-        });
+
+        try {
+            const docRef = await addDoc(collection(db, path), data);
+            await addDoc(collection(db, `users/${authUser}/notifications`), {
+                message: `Expense "${expenses}" of $${amount} added.`,
+                date: new Date(),
+                type: 'expense',
+                expenseId: docRef.id, 
+            });
+            Alert.alert("Success", `Expense "${expenses}" of $${amount} added.`); // Alert on success
+        } catch (error) {
+            Alert.alert("Error", "Failed to add expense. Please try again."); // Alert on error
+        }
     };
 
     const fetchData = async () => {
         const path = `users/${auth.currentUser.uid}/expenses`;
         const q = query(collection(db, path));
         onSnapshot(q, (querySnapshot) => {
-            let items = [];
+            let items: ExpenseItem[] = []; // Ensure items is an array of ExpenseItem
             querySnapshot.forEach((doc) => {
-                let item = doc.data();
-                item.id = doc.id;
+                let item = doc.data() as ExpenseItem; // Cast to ExpenseItem
+                item.id = doc.id; // Add the document ID
                 items.push(item);
             });
             setData(items);
         });
     };
 
-    const ListItem = (props) => {
+    const ListItem = ({ expenses, amount, id }: ExpenseItem) => { // Destructure props
         return (
             <View style={[styles.listItem, { backgroundColor: theme === 'light' ? "#15bfe6" : "#555" }]}>
-                <Text style={[styles.expenseText, { color: theme === 'light' ? '#000' : '#fff' }]}>{props.expenses}</Text>
-                <Text style={[styles.amountText, { color: theme === 'light' ? 'gray' : '#ccc' }]}>${props.amount}</Text>
-                <Link href={{ pathname: "/detail", params: { id: props.id } }}>
+                <Text style={[styles.expenseText, { color: theme === 'light' ? '#000' : '#fff' }]}>{expenses}</Text>
+                <Text style={[styles.amountText, { color: theme === 'light' ? 'gray' : '#ccc' }]}>${amount}</Text>
+                <Link href={{ pathname: "/detail", params: { id } }}>
                     <Text style={{ color: theme === 'light' ? '#000' : '#fff' }}>Detail</Text>
                 </Link>
             </View>
@@ -96,17 +113,16 @@ export default function Expenses() {
         );
     };
 
-    const renderItem = ({ item }) => {
-        return (
-            <ListItem expenses={item.expenses} amount={item.amount} id={item.id} />
-        );
-    };
+    const renderItem = ({ item }: { item: ExpenseItem }) => (
+        <ListItem expenses={item.expenses} amount={item.amount} id={item.id} time={0} />
+    );
 
     return (
         <View style={[styles.container, { backgroundColor: theme === 'light' ? '#fff' : '#333' }]}>
             <View style={[styles.totalContainer, { backgroundColor: theme === 'light' ? "#FFC300" : "#1a1a1a" }]}>
                 <Text style={[styles.totalText, { color: theme === 'light' ? '#000' : '#fff' }]}>Total Expenses: ${totalExpenses}</Text>
             </View>
+            <Text style={styles.goalsTitle}>My Expenses</Text>
             <Pressable
                 style={styles.addButton}
                 onPress={() => setModalVisible(true)}
@@ -115,6 +131,7 @@ export default function Expenses() {
                     <Ionicons name="add" size={24} />
                 </Text>
             </Pressable>
+            
             <FlatList
                 data={data}
                 renderItem={renderItem}
@@ -122,6 +139,7 @@ export default function Expenses() {
                 ItemSeparatorComponent={Separator}
                 style={styles.list}
             />
+            
             <Modal
                 animationType="fade"
                 transparent={false}
@@ -265,5 +283,10 @@ const styles = StyleSheet.create({
     totalText: {
         fontSize: 20,
         fontWeight: 'bold',
+    },
+    goalsTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginVertical: 20,
     },
 });

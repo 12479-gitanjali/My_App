@@ -1,8 +1,7 @@
 import { SignOutButton } from "@/components/SignOutButton";
 import { AuthContext } from "@/contexts/AuthContext";
 import { DbContext } from "@/contexts/DbContext";
-import { ThemeContext } from "@/contexts/ThemeContext"; // Import ThemeContext
-import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/contexts/ThemeContext";// Import ThemeContext
 import { Link, useNavigation, useRouter } from "expo-router";
 import { addDoc, collection, query, onSnapshot } from "firebase/firestore";
 import React, { useContext, useEffect, useState } from "react";
@@ -12,7 +11,7 @@ import { PieChart } from "react-native-chart-kit";
 export default function Home() {
     const auth = useContext(AuthContext);
     const db = useContext(DbContext);
-    const { theme } = useContext(ThemeContext); // Consume ThemeContext
+    const { theme } = useTheme();
     const router = useRouter();
     const navigation = useNavigation();
 
